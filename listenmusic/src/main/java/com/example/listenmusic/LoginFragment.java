@@ -3,25 +3,34 @@ package com.example.listenmusic;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import com.example.listenmusic.db.User;
+
+import com.example.listenmusic.db.MyDataBaseHelper;
+
 import org.litepal.LitePal;
-import java.util.List;
+
 
 public class LoginFragment extends Fragment {
 
     private EditText inputName, inputPassword;
 
     private Button login, register;
+
+    private MyDataBaseHelper dbHelper;
+
+    private SQLiteDatabase db = dbHelper.getReadableDatabase();
 
     @Nullable
     @Override
@@ -46,12 +55,14 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 String userName = inputName.getText().toString();
                 String userPassword = inputPassword.getText().toString();
-                //通过用户名获取密码
-                String pwd = LitePal.where()
-                List<User> users = LitePal.where("name=?", userName).find(User.class);
-                if (users == null || users.size() == 0) {
-                    Toast.makeText(getActivity(),"用户名不存在",Toast.LENGTH_SHORT).show();
-                }else if ()
+                Cursor cursorName = db.rawQuery("select * from user where name=?", new String[]{userName});
+                Cursor cursorPwd = db.rawQuery("select password from user where name=?", new String[]{userName});
+                if (TextUtils.isEmpty(userName)) {
+                    Toast.makeText(getActivity(), "用户名不能为空", Toast.LENGTH_SHORT).show();
+                } else if (cursorName.getCount() == 0) {
+                    Toast.makeText(getActivity(), "用户名不存在", Toast.LENGTH_SHORT).show();
+                } else if () {
+                }
             }
         });
 
@@ -66,10 +77,5 @@ public class LoginFragment extends Fragment {
                 getActivity().finish();
             }
         });
-    }
-
-    private String readPwd(String userName) {
-        SharedPreferences preferences = getActivity().getSharedPreferences("ListenMusic", Context.MODE_PRIVATE);
-        return preferences.getString(userName, "");
     }
 }
