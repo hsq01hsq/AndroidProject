@@ -1,6 +1,9 @@
 package com.example.listenmusic;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -10,6 +13,8 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import com.example.listenmusic.db.MyDataBaseHelper;
 import com.example.listenmusic.db.User;
 import org.litepal.LitePal;
 
@@ -25,6 +30,10 @@ public class RegisterActivity extends AppCompatActivity {
     private RadioGroup rgGender;
 
     private Button btRegister;
+
+    private MyDataBaseHelper dbHelper;
+
+    private SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +71,10 @@ public class RegisterActivity extends AppCompatActivity {
                         break;
                 }
 
-                List<User> users = LitePal.where("name=?", name).find(User.class);
+//                List<User> users = LitePal.where("name=?", name).find(User.class);
+
+                db = dbHelper.getWritableDatabase();
+                Cursor cursor = db.rawQuery("select * from user where name=?", new String[]{name});
 
                 if (TextUtils.isEmpty(name)) {
                     Toast.makeText(RegisterActivity.this, "请输入用户名", Toast.LENGTH_SHORT).show();
@@ -70,12 +82,12 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(RegisterActivity.this, "请输入密码", Toast.LENGTH_SHORT).show();
                 } else if (TextUtils.isEmpty(gender)) {
                     Toast.makeText(RegisterActivity.this, "请选择性别", Toast.LENGTH_SHORT).show();
-                } else if (users != null || users.size() > 0) {
+                } else if (cursor.getCount() > 0) {
                     Toast.makeText(RegisterActivity.this, "用户名已存在", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(RegisterActivity.this, "注册成功", Toast.LENGTH_SHORT).show();
                     //保存注册信息
-                    saveRegisterInfo(name, password, gender);
+                    saveRegisterInfo(db, name, password, gender);
                     //返回至登录界面
                     Intent intent = new Intent();
                     intent.putExtra("userName", name);
@@ -87,11 +99,16 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
-    private void saveRegisterInfo(String userName, String userPassword, String userGender) {
-        User user = new User();
-        user.setName(userName);
-        user.setPassword(userPassword);
-        user.setGender(userGender);
-        user.save();
+    private void saveRegisterInfo(SQLiteDatabase db, String userName, String userPassword, String userGender) {
+//        User user = new User();
+//        user.setName(userName);
+//        user.setPassword(userPassword);
+//        user.setGender(userGender);
+//        user.save();
+        ContentValues values = new ContentValues();
+        values.put("name", userName);
+        values.put("password", userPassword);
+        values.put("gender", userGender);
+        db.insert("user", null, values);
     }
 }
